@@ -73,7 +73,7 @@ STATUS_NOT_IMPLEMENTED = "HTTP/1.0 401 Not Implemented\n\n"
 def respond(sock):
     """
     This server responds only to GET requests (not PUT, POST, or UPDATE).
-    Any valid GET request is answered with an ascii graphic of a cat. 
+    Any valid GET request is answered with either an html page or css. 
     """
     sent = 0
     request = sock.recv(1024)  # We accept only short requests
@@ -81,9 +81,14 @@ def respond(sock):
     print("\nRequest was {}\n".format(request))
 
     parts = request.split()
-    if len(parts) > 1 and parts[0] == "GET":
+    if check_char(parts[1]):
+        transmit(STATUS_FORBIDDEN, sock)
+        transmit("\nRequest not allowed: {}\n".format(request), sock)
+
+    elif len(parts) > 1 and parts[0] == "GET" and page_exist("./pages" + parts[1]):
         transmit(STATUS_OK, sock)
-        transmit(CAT, sock)
+        transmit(find_page("./pages" + parts[1]), sock)
+
     else:
         transmit(STATUS_NOT_IMPLEMENTED, sock)        
         transmit("\nI don't handle this request: {}\n".format(request), sock)
@@ -97,6 +102,37 @@ def transmit(msg, sock):
     while sent < len(msg):
         buff = bytes( msg[sent: ], encoding="utf-8")
         sent += sock.send( buff )
+
+def find_page(page):
+    """
+    Finds the page and returns
+    """
+    html = open(page)
+    return html.read()
+
+def page_exist(page):
+    """
+    Checks if page exists
+    """
+    bool = True
+    try:
+        open(page)
+    except FileNotFoundError:
+        bool = False
+
+    return bool
+
+def check_char(string):
+    """
+    Checks for illegal characters
+    """
+    if "//" in string or "~" in string or ".." in string:
+        return True
+    elif  string.endswith(".html") or string.endswith(".css"):
+        return False
+    else:
+        return True
+
     
 
 ###

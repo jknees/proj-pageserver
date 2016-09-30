@@ -89,6 +89,10 @@ def respond(sock):
         transmit(STATUS_OK, sock)
         transmit(find_page("./pages" + parts[1]), sock)
 
+    elif not page_exist("./pages" + parts[1]):
+        transmit(STATUS_NOT_FOUND, sock)
+        transmit("\nPage not found: {}\n".format(request), sock)
+
     else:
         transmit(STATUS_NOT_IMPLEMENTED, sock)        
         transmit("\nI don't handle this request: {}\n".format(request), sock)
